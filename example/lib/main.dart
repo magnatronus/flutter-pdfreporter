@@ -37,6 +37,11 @@ class _DemoScreen extends StatelessWidget {
     // Start by creatng a new blank document and set up a standard header
     PDFReportDocument pdf = await PDFReporter.createReport();
     pdf.setPageHeader("PDF Document");
+    pdf.setPageNumbering(
+      true,
+      size: 6.0,
+      alignment: PDFPageNumberAlignment.center
+    );
 
     // Create the first page
     pdf.newPage();

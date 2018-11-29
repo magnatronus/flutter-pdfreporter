@@ -11,10 +11,12 @@ class ReportDocument implements PDFReportDocument {
   final PDFDocumentMargin margin;
   final PDFPageFormat paper;
   final Color defaultFontColor;
+  bool pageNumberingActive = false;
   Color currentFontColor;
   PDFPage currentPage;
   _Cursor cursor;
   Map header;
+  Map pageNumberInfo;
 
   ReportDocument(
       {@required this.document,
@@ -27,32 +29,45 @@ class ReportDocument implements PDFReportDocument {
     currentFontColor = defaultFontColor;
   }
 
-  /// Helper function to insert a newline space into the document
-  /// if [number] is specified then that nuber of linepspaces will be added
   newline({int number: 1}) {
     for (int i = 0; i < number; i++) {
       cursor.newLine();
     }
   }
 
-  /// Helper function to insret a paragrah space into the document
   paragraph() {
     cursor.newParagraph();
   }
 
-  /// Set a simple text page header that will be automatically added as the first line everytime a new page is generated
-  /// This will use  'title' style by default
+  setPageNumbering(bool active,
+      {String prefix, double size, PDFPageNumberAlignment alignment}) {
+    pageNumberingActive = active ?? false;
+    cursor.pageNumberHeight = size ?? textStyle.normal['size'];
+    pageNumberInfo = {
+      "alignment": alignment ?? PDFPageNumberAlignment.center,
+      "prefix": prefix,
+      "size": cursor.pageNumberHeight
+    };
+  }
+
   setPageHeader(text, {Map style}) {
     style = style ?? textStyle.title;
     header = {"text": text, "style": style};
   }
 
-  /// Return a copy of the current PDF documents as an byte array
   asBytes() {
+    // if pageNumbering is active then loop through each page and add a page number
+    if (pageNumberingActive) {
+      int pageTotal = document.pdfPageList.pages.length;
+      for (int i = 0; i < pageTotal; i++) {
+        addPageNumber(document.pdfPageList.pages[i], (i + 1), pageTotal);
+      }
+    }
+
+    // return the document as a byteArray
     return document.save();
   }
 
-  // Add a new page to the current document
   newPage() {
     currentPage = PDFPage(document, pageFormat: paper);
     cursor.reset();
@@ -61,19 +76,14 @@ class ReportDocument implements PDFReportDocument {
     }
   }
 
-  /// Revert the currentFontColor to the default
   setDefaultFontColor() {
     currentFontColor = defaultFontColor;
   }
 
-  /// Set the current font color to [color]
   setFontColor(Color color) {
     currentFontColor = color;
   }
 
-  /// Add the specified [text] to the current page
-  /// [paragraph] can be turned on and off and is used to add space before the text is added
-  /// [style] cn be used to specify the style of the text being added - this will default to 'normal
   addText(String text, {bool paragraph: true, Map style}) {
     // if no currentPage throw an exception
     if (currentPage == null) {
@@ -117,14 +127,6 @@ class ReportDocument implements PDFReportDocument {
     }
   }
 
-  /// This will do a print within the confines of a a left and right bound (a column)
-  /// The effect of this is to print a restricted column of text on a SINGLE line only
-  /// if the specfied text is longer that the column defined for it will be truncated
-  /// [text] is an array of string , 1 element for each column
-  /// [flex] is an array of int defining the flex value for each column
-  /// [spaceMultiplier]  is an int used to speciy the width of the gap between each column
-  ///
-  /// Please note the number of elements in [flex] MUST match the column elements defined in [text]
   addColumnText(List<String> text,
       {List<int> flex,
       int spaceMultiplier: 4,
@@ -191,7 +193,40 @@ class ReportDocument implements PDFReportDocument {
     cursor.move(0, lineHeight);
   }
 
+  /* ************************************************** */
   /* all function below here are NOT exposed publically */
+  /* i.e. they are NOT part of the abstract class       */
+  /* ************************************************** */
+
+  /// Add a page number into the specified [page]
+  addPageNumber(PDFPage page, int pageNumber, int totalPages) {
+    String pageText = "$pageNumber of $totalPages";
+    if (pageNumberInfo['prefix'] != null) {
+      pageText = "${pageNumberInfo['prefix']} $pageNumber of $totalPages";
+    }
+
+    // now calculate space required for page numbering text
+    double size = pageNumberInfo['size'];
+    var bounds = textStyle.normal['font'].stringBounds(pageText);
+    double x = cursor.margin.left;
+    double y = cursor.margin.bottom;
+
+    // right justify the page number
+    if (pageNumberInfo['alignment'] == PDFPageNumberAlignment.right) {
+      x = cursor.maxx - (bounds.w * size);
+    }
+
+    // if center justify
+    if (pageNumberInfo['alignment'] == PDFPageNumberAlignment.center) {
+      double midway = cursor.paperWidth / 2;
+      x = midway - ((bounds.w * size) / 2);
+    }
+
+    // add the page nummbering to the page
+    page
+        .getGraphics()
+        .drawString(textStyle.normal['font'], size, pageText, x, y);
+  }
 
   /// This will calculate the start and stop positions for the specified columns
   /// taking account of a blank space equal to the current [lineSpacng] multiplied by the specified [spaceWidth]
@@ -298,6 +333,9 @@ class _Cursor {
   /// The spacing between each printed line
   double lineSpacing = PDFPageFormat.mm;
 
+  // The space to allow if we have set up page numbering
+  double pageNumberHeight = 0.0;
+
   /// The margin set in the document being generated
   PDFDocumentMargin margin = PDFDocumentMargin();
 
@@ -316,7 +354,7 @@ class _Cursor {
     x = margin.left;
     y = paperHeight - margin.top;
     maxx = paperWidth - margin.right;
-    maxy = margin.bottom;
+    maxy = (margin.bottom + pageNumberHeight);
     printWidth = paperWidth - (margin.right + margin.left);
     printHeight = paperHeight - (margin.top + margin.bottom);
   }

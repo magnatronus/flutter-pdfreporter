@@ -11,10 +11,12 @@ class ReportDocument implements PDFReportDocument {
   final PDFDocumentMargin margin;
   final PDFPageFormat paper;
   final Color defaultFontColor;
+  bool pageNumberingActive = false;
   Color currentFontColor;
   PDFPage currentPage;
   _Cursor cursor;
   Map header;
+  Map pageNumberInfo;
 
   ReportDocument(
       {@required this.document,
@@ -40,6 +42,21 @@ class ReportDocument implements PDFReportDocument {
     cursor.newParagraph();
   }
 
+  /// Turn page numbering on and off with [active] this will always default to false
+  /// The optional [prefix] is added to the page number as prefix text, for example
+  /// instead of just 1 of 3, it can be set up as page 1 of 3
+  /// Page numbers will be printed in the normal font, but by using [size] the 
+  /// font size can altered from the preset size
+  setPageNumbering(bool active, {String prefix, double size,  PDFPageNumberAlignment alignment}){
+    pageNumberingActive = active ?? false;
+    cursor.pageNumberHeight = size ?? textStyle.normal['size'];  
+    pageNumberInfo = {
+      "alignment": alignment ?? PDFPageNumberAlignment.center,
+      "prefix": prefix,
+      "size": cursor.pageNumberHeight
+    };
+  }
+
   /// Set a simple text page header that will be automatically added as the first line everytime a new page is generated
   /// This will use  'title' style by default
   setPageHeader(text, {Map style}) {
@@ -49,7 +66,18 @@ class ReportDocument implements PDFReportDocument {
 
   /// Return a copy of the current PDF documents as an byte array
   asBytes() {
+
+    // if pageNumbering is active then loop through each page and add a page number
+    if(pageNumberingActive){
+      int pageTotal = document.pdfPageList.pages.length;
+      for(int i=0;i<pageTotal;i++){
+        addPageNumber(document.pdfPageList.pages[i], (i+1), pageTotal);
+      }
+    }
+
+    // return the document as a byteArray
     return document.save();
+
   }
 
   // Add a new page to the current document
@@ -191,7 +219,39 @@ class ReportDocument implements PDFReportDocument {
     cursor.move(0, lineHeight);
   }
 
+  /* ************************************************** */
   /* all function below here are NOT exposed publically */
+  /* i.e. they are NOT part of the abstract class       */
+  /* ************************************************** */
+
+
+  /// Add a page number into the specified [page] 
+  addPageNumber(PDFPage page, int pageNumber, int totalPages){
+    String pageText = "$pageNumber of $totalPages";
+    if(pageNumberInfo['prefix'] != null) {
+      pageText = "${pageNumberInfo['prefix']} $pageNumber of $totalPages";
+    }
+
+    // now calculate space required for page numbering text
+    double size = pageNumberInfo['size'];
+    var bounds = textStyle.normal['font'].stringBounds(pageText);
+    double x = cursor.margin.left;
+    double y = cursor.margin.bottom;
+
+    // right justify the page number
+    if(pageNumberInfo['alignment'] == PDFPageNumberAlignment.right){
+      x  = cursor.maxx - (bounds.w * size);
+    }
+
+    // if center justify
+    if(pageNumberInfo['alignment'] == PDFPageNumberAlignment.center){
+      double midway = cursor.paperWidth / 2;
+      x  = midway - ((bounds.w * size)/2);
+    }    
+
+    // add the page nummbering to the page
+    page.getGraphics().drawString(textStyle.normal['font'], size, pageText, x, y);
+  }
 
   /// This will calculate the start and stop positions for the specified columns
   /// taking account of a blank space equal to the current [lineSpacng] multiplied by the specified [spaceWidth]
@@ -298,6 +358,9 @@ class _Cursor {
   /// The spacing between each printed line
   double lineSpacing = PDFPageFormat.mm;
 
+  // The space to allow if we have set up page numbering
+  double pageNumberHeight = 0.0;
+
   /// The margin set in the document being generated
   PDFDocumentMargin margin = PDFDocumentMargin();
 
@@ -316,7 +379,7 @@ class _Cursor {
     x = margin.left;
     y = paperHeight - margin.top;
     maxx = paperWidth - margin.right;
-    maxy = margin.bottom;
+    maxy = (margin.bottom + pageNumberHeight);
     printWidth = paperWidth - (margin.right + margin.left);
     printHeight = paperHeight - (margin.top + margin.bottom);
   }

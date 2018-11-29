@@ -1,0 +1,31 @@
+name: pdfreporter
+description: A PDF document generator.
+version: 0.0.1
+author: Steve Rogers <srogers.uk@gmail.com>
+homepage: https://github.com/magnatronus/flutter-pdfreporter
+
+environment:
+  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Plugin Dependencies
+  pdf: ^1.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+
+# The following section is specific to Flutter.
+flutter:
+
+  fonts:
+    - family: Open Sans
+      fonts:
+        - asset: packages/pdfreporter/fonts/OpenSans-Regular.ttf
+        - asset: packages/pdfreporter/fonts/OpenSans-SemiBold.ttf
+        - asset: packages/pdfreporter/fonts/OpenSans-Bold.ttf

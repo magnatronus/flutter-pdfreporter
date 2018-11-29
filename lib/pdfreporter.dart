@@ -17,6 +17,10 @@ export 'src/pdftextstyle.dart';
 /// This is the main class used to create and generate a complete PDF document which wraps and
 ///  uses the excellent https://github.com/DavBfr/dart_pdf/tree/master/pdf project for all the actual PDF functionality
 class PDFReporter {
+  /// This is the method that is used to create a PDFReport and takes 3 optional values
+  /// [textStyle] if this is specified it will override the default style
+  /// [margin] if specified will override the defaults
+  /// [defaultFontColor] set this to chnage the default document font color
   static createReport(
       {PDFTextStyle textStyle,
       PDFDocumentMargin margin,

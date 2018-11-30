@@ -23,7 +23,7 @@ class PDFReporter {
   /// [textStyle] if this is specified it will override the default style
   /// [margin] if specified will override the defaults
   /// [defaultFontColor] set this to change the default document font color
-  /// [size] is the paper size to create. If not specified it will default to A4
+  /// [paper] is the paper size to create. If not specified it will default to A4
   static createReport(
       {PDFTextStyle textStyle,
       PDFDocumentMargin margin,

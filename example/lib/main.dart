@@ -35,13 +35,11 @@ class _DemoScreen extends StatelessWidget {
   /// Test the the PDFReporter plugin and geerate a report we can save and show
   generateReport(context) async {
     // Start by creatng a new blank document and set up a standard header
-    PDFReportDocument pdf = await PDFReporter.createReport();
+    PDFReportDocument pdf = await PDFReporter.createReport(
+        paper: PDFDocumentSize(size: DocumentPaperSize.a5));
     pdf.setPageHeader("PDF Document");
-    pdf.setPageNumbering(
-      true,
-      size: 6.0,
-      alignment: PDFPageNumberAlignment.center
-    );
+    pdf.setPageNumbering(true,
+        size: 6.0, alignment: PDFPageNumberAlignment.center);
 
     // Create the first page
     pdf.newPage();

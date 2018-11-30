@@ -333,6 +333,9 @@ class _Cursor {
   /// The spacing between each printed line
   double lineSpacing = PDFPageFormat.mm;
 
+  // Space to Leave for a new paragraph
+  double paragraphHeight = (PDFPageFormat.mm * 4);
+
   // The space to allow if we have set up page numbering
   double pageNumberHeight = 0.0;
 
@@ -354,7 +357,9 @@ class _Cursor {
     x = margin.left;
     y = paperHeight - margin.top;
     maxx = paperWidth - margin.right;
-    maxy = (margin.bottom + pageNumberHeight);
+    maxy = (pageNumberHeight == 0)
+        ? margin.bottom
+        : (margin.bottom + pageNumberHeight + paragraphHeight);
     printWidth = paperWidth - (margin.right + margin.left);
     printHeight = paperHeight - (margin.top + margin.bottom);
   }
@@ -366,7 +371,7 @@ class _Cursor {
 
   /// add a paragraph space
   newParagraph() {
-    y -= (lineSpacing * 4);
+    y -= paragraphHeight;
   }
 
   // Move the cursor relative to the current position

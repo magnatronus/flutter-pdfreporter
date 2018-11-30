@@ -1,6 +1,6 @@
 name: pdfreporter
 description: A PDF document generator.
-version: 0.0.1
+version: 0.0.3
 author: Steve Rogers <srogers.uk@gmail.com>
 homepage: https://github.com/magnatronus/flutter-pdfreporter
 

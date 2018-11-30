@@ -15,6 +15,7 @@ import 'src/pdfdocumentsize.dart';
 export 'src/pdfdocument.dart';
 export 'src/pdftextstyle.dart';
 export 'src/pdfdocumentsize.dart';
+export 'src/pdfmargin.dart';
 
 /// This is the main class used to create and generate a complete PDF document which wraps and
 ///  uses the excellent https://github.com/DavBfr/dart_pdf/tree/master/pdf project for all the actual PDF functionality

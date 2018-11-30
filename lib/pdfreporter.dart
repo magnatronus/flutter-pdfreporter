@@ -16,7 +16,6 @@ export 'src/pdfdocument.dart';
 export 'src/pdftextstyle.dart';
 export 'src/pdfdocumentsize.dart';
 
-
 /// This is the main class used to create and generate a complete PDF document which wraps and
 ///  uses the excellent https://github.com/DavBfr/dart_pdf/tree/master/pdf project for all the actual PDF functionality
 class PDFReporter {
@@ -30,7 +29,6 @@ class PDFReporter {
       PDFDocumentMargin margin,
       PDFDocumentSize paper,
       Color defaultFontColor}) async {
-
     // Make sure our params are loaded and defaulted
     PDFDocument document = PDFDocument(deflate: zlib.encode);
     textStyle = textStyle ?? await _createDefaultTextStyle(document);
@@ -48,8 +46,6 @@ class PDFReporter {
     );
   }
 
-
- 
   /// Add the loaded fonts to out default PDFTextStyle
   static _createDefaultTextStyle(document) async {
     PDFTextStyle defaultStyle = PDFTextStyle();

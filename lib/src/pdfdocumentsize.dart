@@ -1,6 +1,6 @@
 import 'package:pdf/pdf.dart';
 
-// enum of stanrad available paper sizes
+// enum of standard available paper sizes
 enum DocumentPaperSize { a5, a4, a3, letter, legal }
 
 /// Simple class to expose PDFPageFormat
@@ -10,10 +10,13 @@ class PDFDocumentSize {
   final double width;
   final double height;
 
+  /// Define the size of the paper to use when creating PDF Document pages
+  /// Either use a pre-defined [size] OR specify the [width] and [height]
+  /// [landscape] can also be set to  select either portrat(the default) or lanscape orientation
   PDFDocumentSize({this.size, this.landscape: false, this.width, this.height}) {
     if ((size == null) && (width == null || height == null)) {
       throw Exception(
-          "Either a size MUST be specified ot the width and height MUST be provided");
+          "Either a size MUST be specified or the width and height MUST be provided.");
     }
   }
 

@@ -9,11 +9,13 @@ class PDFDocumentMargin {
   double _bottom;
   double _right;
 
+  /// Generate a  Document margin specifying the sizes im MM. The default size is 25.4MM
+  /// but by specifying [top], [left], [bottom] or [right] this can be altered
   PDFDocumentMargin({double top, double left, double bottom, double right})
-      : _top = top ?? standard,
-        _left = left ?? standard,
-        _bottom = bottom ?? standard,
-        _right = right ?? standard;
+      : _top = (top * PDFPageFormat.mm) ?? standard,
+        _left = (left * PDFPageFormat.mm) ?? standard,
+        _bottom = (bottom * PDFPageFormat.mm) ?? standard,
+        _right = (right * PDFPageFormat.mm) ?? standard;
 
   get top {
     return _top;

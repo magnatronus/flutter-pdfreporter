@@ -41,7 +41,7 @@ class _DemoScreen extends StatelessWidget {
             top: 10.0, left: 10.0, bottom: 10.0, right: 10.0));
     pdf.setPageHeader("PDF Document");
     pdf.setPageNumbering(true,
-        size: 6.0, alignment: PDFPageNumberAlignment.center);
+        size: 6.0, alignment: PDFPageNumberAlignment.right);
 
     // Create the first page
     pdf.newPage();

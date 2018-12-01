@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pdftextstyle.dart';
+import 'pdfdocumentimage.dart';
 
 /// Enum used to specify the alignment of the page nubering
 enum PDFPageNumberAlignment { left, right, center }
@@ -8,6 +9,11 @@ enum PDFPageNumberAlignment { left, right, center }
 /// and the  functionality available through the PDFReporter.createReport() method
 abstract class PDFReportDocument {
   PDFTextStyle textStyle;
+
+
+  /// Add an [image] to the current page at position [x], [y]
+  /// with [width] and [height]
+  addImage(PDFDocumentImage image, {double x, double y, double width, double height});
 
   /// Return a copy of the current PDF documents as an byte array
   /// this data can be saved as a pdf file

@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'pdfdocument.dart';
 import 'pdftextstyle.dart';
 import 'pdfmargin.dart';
+import 'pdfdocumentimage.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 /// This is our concrete class used to represent a PDF document
 class ReportDocument implements PDFReportDocument {
@@ -28,6 +32,34 @@ class ReportDocument implements PDFReportDocument {
     cursor.margin = margin;
     currentFontColor = defaultFontColor;
   }
+
+
+
+
+   addImage(PDFDocumentImage image, {double x, double y, double width, double height}) async {
+
+    if (currentPage == null) {
+      throw Exception(
+          "The current document has no pages. To add one use the  newPage() method.");
+    }
+
+    var result = await image.load();
+    print(result.height);
+    print(result.width);
+    ByteData bd = await result.toByteData(format: ImageByteFormat.rawRgba);
+    PDFImage pdfimage =  PDFImage(
+      document,
+      image: bd.buffer.asUint8List(),
+      width: result.width,
+      height: result.height);
+
+    // adjust x & y pos for mm
+    //x = (x * PDFPageFormat.mm);
+    //y = (y/PDFPageFormat.mm);
+
+    currentPage.getGraphics().drawImage(pdfimage,  cursor.x + x, (cursor.paperHeight - cursor.margin.top) - (y + height), width, height);
+    
+   }
 
   newline({int number: 1}) {
     for (int i = 0; i < number; i++) {
@@ -330,10 +362,10 @@ class _Cursor {
   double printWidth;
   double printHeight;
 
-  /// The spacing between each printed line
+  /// Default the spacing between each printed line to me 1MM
   double lineSpacing = PDFPageFormat.mm;
 
-  // Space to Leave for a new paragraph
+  // Set the space to Leave for a new paragraph to be 4MM
   double paragraphHeight = (PDFPageFormat.mm * 4);
 
   // The space to allow if we have set up page numbering

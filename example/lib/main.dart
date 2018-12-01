@@ -1,8 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfreporter/pdfreporter.dart';
 import 'package:flutter_full_pdf_viewer/full_pdf_viewer_scaffold.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 /// Demo app for testing te PDFReporter Package
 void main() => runApp(PDFReporterDemo());
@@ -32,6 +36,46 @@ class _DemoScreen extends StatelessWidget {
     );
   }
 
+
+  /*
+  report(context) async {
+    final pdf = PDFDocument(deflate: zlib.encode);
+    final page = PDFPage(pdf, pageFormat: PDFPageFormat.a4);
+    final g = page.getGraphics();
+    final font =  PDFFont(pdf);
+    final top = page.pageFormat.height;
+
+    ByteData data = await rootBundle.load('images/cat.png');
+
+    var codec = await instantiateImageCodec ( data.buffer.asUint8List() );
+    var frame = await codec.getNextFrame();
+    var imageBytes = await frame.image.toByteData();
+
+    PDFImage image = new PDFImage(
+      pdf,
+      image: imageBytes.buffer.asUint8List(),
+      width: 100,
+      height: 100);
+
+   g.drawImage(image, 0.0, 100.0, 100.0);
+
+    /// To view the PDF we should save it first
+    var savedfile = await _saveAndViewReport(pdf.save(), "helloword");
+
+    // then pass the file to the viewer if it created OK
+    if (savedfile != null) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => PDFViewer(
+                    pdffile: savedfile,
+                  )));
+    }
+
+  }
+  */
+
+
   /// Test the the PDFReporter plugin and geerate a report we can save and show
   generateReport(context) async {
     // Start by creatng a new blank document and set up a standard header
@@ -41,11 +85,21 @@ class _DemoScreen extends StatelessWidget {
         );
     pdf.setPageHeader("PDF Document");
     pdf.setPageNumbering(true,
-        size: 6.0, alignment: PDFPageNumberAlignment.right);
+        size: 8.0, alignment: PDFPageNumberAlignment.right);
 
     // Create the first page
     pdf.newPage();
 
+    await pdf.addImage( 
+      PDFDocumentImage.loadAssetImage("images/cat.png"),
+      x: 200.0,
+      y: 200.0,
+      width: 100.0,
+      height: 100.0  
+    );
+ 
+
+/*
     // Add a paragraph of text
     pdf.addText("This is Heading 1", style: pdf.textStyle.heading1);
     pdf.addText(
@@ -105,6 +159,8 @@ class _DemoScreen extends StatelessWidget {
           "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
           "content has been created, giving the design and production process more freedom.",
     );
+
+*/
 
     /// To view the PDF we should save it first
     var savedfile = await _saveAndViewReport(pdf.asBytes(), "helloword");

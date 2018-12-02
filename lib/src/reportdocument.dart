@@ -33,11 +33,8 @@ class ReportDocument implements PDFReportDocument {
     currentFontColor = defaultFontColor;
   }
 
-
-
-
-   addImage(PDFDocumentImage image, {double x, double y, double width, double height}) async {
-
+  addImage(PDFDocumentImage image,
+      {double x, double y, double width, double height}) async {
     if (currentPage == null) {
       throw Exception(
           "The current document has no pages. To add one use the  newPage() method.");
@@ -48,30 +45,29 @@ class ReportDocument implements PDFReportDocument {
     //print(result.width);
 
     // calc WxH aspect ratio
-    double aspectRatio = (result.height/result.width);
+    double aspectRatio = (result.height / result.width);
 
     // if no width and no height use pixels
-    if(height == null && width ==null){
+    if (height == null && width == null) {
       height = result.height * 1.0;
       width = result.width * 1.0;
     }
 
     // adjust height or width as required
-    width = (width==null)?(height/aspectRatio):width;
-    height = (height==null)?(width*aspectRatio):height;
+    width = (width == null) ? (height / aspectRatio) : width;
+    height = (height == null) ? (width * aspectRatio) : height;
 
     // Extract the image data
     ByteData bd = await result.toByteData(format: ImageByteFormat.rawRgba);
-    PDFImage pdfimage =  PDFImage(
-      document,
-      image: bd.buffer.asUint8List(),
-      width: result.width,
-      height: result.height);
+    PDFImage pdfimage = PDFImage(document,
+        image: bd.buffer.asUint8List(),
+        width: result.width,
+        height: result.height);
 
     // Add image to current page
-    currentPage.getGraphics().drawImage(pdfimage,  cursor.x + x, (cursor.paperHeight - cursor.margin.top) - (y + height), width, height);
-    
-   }
+    currentPage.getGraphics().drawImage(pdfimage, cursor.x + x,
+        (cursor.paperHeight - cursor.margin.top) - (y + height), width, height);
+  }
 
   newline({int number: 1}) {
     for (int i = 0; i < number; i++) {
@@ -128,7 +124,8 @@ class ReportDocument implements PDFReportDocument {
     currentFontColor = color;
   }
 
-  addText(String text, {bool paragraph: true, Map style}) {
+  addText(String text,
+      {bool paragraph: true, Map style, Color backgroundColor}) {
     // if no currentPage throw an exception
     if (currentPage == null) {
       throw Exception(
@@ -393,9 +390,9 @@ class _Cursor {
 
   /// debug print
   printBounds() {
-    print("paperHeight: $paperHeight, paperWidth: $paperWidth, printHeight: $printHeight, printWidth: $printWidth");
+    print(
+        "paperHeight: $paperHeight, paperWidth: $paperWidth, printHeight: $printHeight, printWidth: $printWidth");
     print("x: $x, y: $y, maxx: $maxx, maxy: $maxy");
-
   }
 
   /// Reset the cursor ready for a new page

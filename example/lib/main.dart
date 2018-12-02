@@ -101,6 +101,7 @@ class _DemoScreen extends StatelessWidget {
     );
     */
 
+    /*
     await pdf.addImage( 
       PDFDocumentImage.loadAssetImage("images/cat.png"),
       x: 50.0,
@@ -108,16 +109,17 @@ class _DemoScreen extends StatelessWidget {
       width: 200.0,
       //height: 150.0  
     );
+    */
 
-
-/*
     // Add a paragraph of text
     pdf.addText("This is Heading 1", style: pdf.textStyle.heading1);
     pdf.addText(
       "1. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
           "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
-          "content has been created, giving the design and production process more freedom.",
+          "content has been created, giving the design and production process more freedom."
     );
+
+/*
 
     // Add another paragraph in a different color
     pdf.setFontColor(Colors.orange);

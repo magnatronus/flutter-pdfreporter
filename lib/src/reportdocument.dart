@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'pdfdocument.dart';
 import 'pdftextstyle.dart';
 import 'pdfmargin.dart';
+import 'pdfdocumentimage.dart';
+//import 'package:flutter/services.dart' show rootBundle;
 
 /// This is our concrete class used to represent a PDF document
 class ReportDocument implements PDFReportDocument {
@@ -27,6 +31,42 @@ class ReportDocument implements PDFReportDocument {
     cursor = _Cursor(paper.dimension.h, paper.dimension.w);
     cursor.margin = margin;
     currentFontColor = defaultFontColor;
+  }
+
+  addImage(PDFDocumentImage image,
+      {double x, double y, double width, double height}) async {
+    if (currentPage == null) {
+      throw Exception(
+          "The current document has no pages. To add one use the  newPage() method.");
+    }
+
+    var result = await image.load();
+    //print(result.height);
+    //print(result.width);
+
+    // calc WxH aspect ratio
+    double aspectRatio = (result.height / result.width);
+
+    // if no width and no height use pixels
+    if (height == null && width == null) {
+      height = result.height * 1.0;
+      width = result.width * 1.0;
+    }
+
+    // adjust height or width as required
+    width = (width == null) ? (height / aspectRatio) : width;
+    height = (height == null) ? (width * aspectRatio) : height;
+
+    // Extract the image data
+    ByteData bd = await result.toByteData(format: ImageByteFormat.rawRgba);
+    PDFImage pdfimage = PDFImage(document,
+        image: bd.buffer.asUint8List(),
+        width: result.width,
+        height: result.height);
+
+    // Add image to current page
+    currentPage.getGraphics().drawImage(pdfimage, cursor.x + x,
+        (cursor.paperHeight - cursor.margin.top) - (y + height), width, height);
   }
 
   newline({int number: 1}) {
@@ -84,7 +124,8 @@ class ReportDocument implements PDFReportDocument {
     currentFontColor = color;
   }
 
-  addText(String text, {bool paragraph: true, Map style}) {
+  addText(String text,
+      {bool paragraph: true, Map style, Color backgroundColor}) {
     // if no currentPage throw an exception
     if (currentPage == null) {
       throw Exception(
@@ -330,10 +371,10 @@ class _Cursor {
   double printWidth;
   double printHeight;
 
-  /// The spacing between each printed line
+  /// Default the spacing between each printed line to me 1MM
   double lineSpacing = PDFPageFormat.mm;
 
-  // Space to Leave for a new paragraph
+  // Set the space to Leave for a new paragraph to be 4MM
   double paragraphHeight = (PDFPageFormat.mm * 4);
 
   // The space to allow if we have set up page numbering
@@ -349,6 +390,8 @@ class _Cursor {
 
   /// debug print
   printBounds() {
+    print(
+        "paperHeight: $paperHeight, paperWidth: $paperWidth, printHeight: $printHeight, printWidth: $printWidth");
     print("x: $x, y: $y, maxx: $maxx, maxy: $maxy");
   }
 
@@ -362,6 +405,8 @@ class _Cursor {
         : (margin.bottom + pageNumberHeight + paragraphHeight);
     printWidth = paperWidth - (margin.right + margin.left);
     printHeight = paperHeight - (margin.top + margin.bottom);
+
+    printBounds();
   }
 
   // Add a new line space

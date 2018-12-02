@@ -16,6 +16,7 @@ export 'src/pdfdocument.dart';
 export 'src/pdftextstyle.dart';
 export 'src/pdfdocumentsize.dart';
 export 'src/pdfmargin.dart';
+export 'src/pdfdocumentimage.dart';
 
 /// This is the main class used to create and generate a complete PDF document which wraps and
 ///  uses the excellent https://github.com/DavBfr/dart_pdf/tree/master/pdf project for all the actual PDF functionality
@@ -47,7 +48,7 @@ class PDFReporter {
     );
   }
 
-  /// Add the loaded fonts to out default PDFTextStyle
+  /// Add the defult Open Sans fonts to out default PDFTextStyle
   static _createDefaultTextStyle(document) async {
     PDFTextStyle defaultStyle = PDFTextStyle();
     ByteData standardFont = await rootBundle

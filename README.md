@@ -7,11 +7,13 @@ Take a look at the included example project to see how to create a document. Als
 
 The report currently uses a pre-defined set of text styles based around the Google Open Sans fonts set up as follows:
 
-- title: 24 pt, bold
-- heading1: 19 pt, bold
-- heading2: 16pt, bold
-- heading1: 12 pt, semi-bold
+- title: 20 pt, bold
+- heading1: 15 pt, bold
+- heading2: 12pt, bold
+- heading1: 10 pt, semi-bold
 - normal: 10pt, regular
+
+This can be altered by creating or modifying a **PDFTextStyle**.
 
 
 ## Methods available

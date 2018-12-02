@@ -6,7 +6,7 @@ import 'pdfdocument.dart';
 import 'pdftextstyle.dart';
 import 'pdfmargin.dart';
 import 'pdfdocumentimage.dart';
-import 'package:flutter/services.dart' show rootBundle;
+//import 'package:flutter/services.dart' show rootBundle;
 
 /// This is our concrete class used to represent a PDF document
 class ReportDocument implements PDFReportDocument {
@@ -44,8 +44,23 @@ class ReportDocument implements PDFReportDocument {
     }
 
     var result = await image.load();
-    print(result.height);
-    print(result.width);
+    //print(result.height);
+    //print(result.width);
+
+    // calc WxH aspect ratio
+    double aspectRatio = (result.height/result.width);
+
+    // if no width and no height use pixels
+    if(height == null && width ==null){
+      height = result.height * 1.0;
+      width = result.width * 1.0;
+    }
+
+    // adjust height or width as required
+    width = (width==null)?(height/aspectRatio):width;
+    height = (height==null)?(width*aspectRatio):height;
+
+    // Extract the image data
     ByteData bd = await result.toByteData(format: ImageByteFormat.rawRgba);
     PDFImage pdfimage =  PDFImage(
       document,
@@ -53,10 +68,7 @@ class ReportDocument implements PDFReportDocument {
       width: result.width,
       height: result.height);
 
-    // adjust x & y pos for mm
-    //x = (x * PDFPageFormat.mm);
-    //y = (y/PDFPageFormat.mm);
-
+    // Add image to current page
     currentPage.getGraphics().drawImage(pdfimage,  cursor.x + x, (cursor.paperHeight - cursor.margin.top) - (y + height), width, height);
     
    }
@@ -381,7 +393,9 @@ class _Cursor {
 
   /// debug print
   printBounds() {
+    print("paperHeight: $paperHeight, paperWidth: $paperWidth, printHeight: $printHeight, printWidth: $printWidth");
     print("x: $x, y: $y, maxx: $maxx, maxy: $maxy");
+
   }
 
   /// Reset the cursor ready for a new page
@@ -394,6 +408,8 @@ class _Cursor {
         : (margin.bottom + pageNumberHeight + paragraphHeight);
     printWidth = paperWidth - (margin.right + margin.left);
     printHeight = paperHeight - (margin.top + margin.bottom);
+
+    printBounds();
   }
 
   // Add a new line space

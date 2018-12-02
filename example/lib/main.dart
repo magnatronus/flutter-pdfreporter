@@ -90,14 +90,25 @@ class _DemoScreen extends StatelessWidget {
     // Create the first page
     pdf.newPage();
 
+    /*
+    // load a network image
+    await pdf.addImage( 
+      PDFDocumentImage.loadNetworkImage({put url here}),
+      x: 50.0,
+      y: 50.0,
+      width: 200.0,
+      //height: 150.0  
+    );
+    */
+
     await pdf.addImage( 
       PDFDocumentImage.loadAssetImage("images/cat.png"),
-      x: 200.0,
-      y: 200.0,
-      width: 100.0,
-      height: 100.0  
+      x: 50.0,
+      y: 50.0,
+      width: 200.0,
+      //height: 150.0  
     );
- 
+
 
 /*
     // Add a paragraph of text

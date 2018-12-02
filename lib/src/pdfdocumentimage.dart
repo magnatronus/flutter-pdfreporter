@@ -3,47 +3,29 @@ import 'dart:ui';
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+/// Class that encapsulated an image for PDF printing that can be added either from an embedded asset
+/// or loaded from the network, using a URL
 class PDFDocumentImage {
-  
-    int width;
-    int height;
-    Uint8List image;
-    Image _img;
+  int width;
+  int height;
+  Uint8List image;
+  Image _img;
 
-    PDFDocumentImage.loadAssetImage(String name){
-      _img = Image.asset(name);
-    }
-
-    ///  Load our image
-    load(){
-      Completer completer = Completer();
-      _img.image
-        .resolve(ImageConfiguration())
-        .addListener((ImageInfo info, bool _) =>completer.complete(info.image));
-      return completer.future;      
-    }
-
-  /// Load an image from an asset
-  loadAssetAImage(String name) async {
-    Image img = Image.asset(name);
-    img.image.resolve(ImageConfiguration()).addListener((ImageInfo info, bool _) async {
-      height = info.image.height;
-      width = info.image.width;
-      ByteData bd = await info.image.toByteData(format: ImageByteFormat.rawRgba);
-      image = bd.buffer.asUint8List();
-    });
+  /// Load an embedded asset image [name]
+  PDFDocumentImage.loadAssetImage(String name) {
+    _img = Image.asset(name);
   }
 
-
-  /// Load an image from a network location
-  loadNetworkAImage(String url) async {
-    Image img = Image.network(url);
-    img.image.resolve(ImageConfiguration()).addListener((ImageInfo info, bool _) async {
-      height = info.image.height;
-      width = info.image.width;
-      ByteData bd = await info.image.toByteData(format: ImageByteFormat.rawRgba);
-      image = bd.buffer.asUint8List();
-    });
+  /// Load a remote network image [url]
+  PDFDocumentImage.loadNetworkImage(String url) {
+    _img = Image.network(url);
   }
 
+  ///  Actually Load the image resource which will return when the load is complete
+  load() {
+    Completer completer = Completer();
+    _img.image.resolve(ImageConfiguration()).addListener(
+        (ImageInfo info, bool _) => completer.complete(info.image));
+    return completer.future;
+  }
 }

@@ -61,8 +61,9 @@ abstract class PDFReportDocument {
   /// Add the specified [text] to the current page
   /// [paragraph] can be turned on and off , if set it will add a newline BEFORE any text is printed and if false by default
   /// [style] cn be used to specify the style of the text being added - this will default to 'normal'
+  /// if [indent] is specified then the start of the text will be indented from the margin by this amount
   addText(String text,
-      {bool paragraph: true, Map style, Color backgroundColor});
+      {bool paragraph: true, Map style, Color backgroundColor, double indent});
 
   /// This will do a print within the confines of a a left and right bound (a column)
   /// The effect of this is to print a restricted column of text on a SINGLE line only

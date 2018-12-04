@@ -130,7 +130,7 @@ class ReportDocument implements PDFReportDocument {
   }
 
   addText(String text,
-      {bool paragraph: false, Map style, Color backgroundColor}) {
+      {bool paragraph: false, Map style, Color backgroundColor, double indent: 0.0}) {
     // if no currentPage throw an exception
     if (currentPage == null) {
       throw Exception(
@@ -156,8 +156,8 @@ class ReportDocument implements PDFReportDocument {
         line = w;
       } else {
         PDFDocumentText textInfo = PDFDocumentText((line + "$w"), textFont, style['size']);       
-        if (textInfo.lineWidth > cursor.printWidth) {
-          printLine(PDFDocumentText(line, textFont, style['size']), backgroundColor);
+        if (textInfo.lineWidth > (cursor.printWidth - indent)) {
+          printLine(PDFDocumentText(line, textFont, style['size']), backgroundColor, indent);
           line = w;
         } else {
           line += ' $w';
@@ -167,7 +167,7 @@ class ReportDocument implements PDFReportDocument {
 
     // add any text that is left then a newline
     if (line.length > 0) {
-      printLine(PDFDocumentText(line, textFont, style['size']), backgroundColor);
+      printLine(PDFDocumentText(line, textFont, style['size']), backgroundColor, indent);
       //cursor.newLine();
     }
   }
@@ -337,7 +337,7 @@ class ReportDocument implements PDFReportDocument {
   /// This will print out the string specified in [line] using the current cursor position
   /// and the [font] and [size] specified
   /// If the line will not fit on the page it will first create a new page
-  printLine(PDFDocumentText text, backgroundColor) {
+  printLine(PDFDocumentText text, backgroundColor, double indent) {
 
      //print("------------------------------------------------------------------------------------");
      //cursor.printBounds();
@@ -349,12 +349,12 @@ class ReportDocument implements PDFReportDocument {
     }
 
     // move cursor ready for text print
-    cursor.move(0.0, text.cursory);
+    cursor.move(indent, text.cursory);
 
     // draw a box around the text
     if(backgroundColor != null){
       currentPage.getGraphics().setColor(PDFColor.fromInt(backgroundColor.value));
-      currentPage.getGraphics().drawRect(cursor.x, cursor.y, cursor.printWidth, text.cursory);
+      currentPage.getGraphics().drawRect(cursor.x, cursor.y, (cursor.printWidth - indent) , text.cursory);
       currentPage.getGraphics().fillPath(); 
     }
 
@@ -364,8 +364,11 @@ class ReportDocument implements PDFReportDocument {
         .setColor(PDFColor.fromInt(currentFontColor.value));
 
 
-    // print text to page
+    // print text to page 
     currentPage.getGraphics().drawString(text.font, text.size, text.text, (cursor.x + text.padding), ( cursor.y  + text.padding - text.gutter));
+
+    // Reset the margin in case of an indent print
+    cursor.resetMargin();
 
   }
 }
@@ -422,11 +425,20 @@ class _Cursor {
     y -= lineSpacing;
   }
 
+  // Reset the margin left
+  resetMargin(){
+    x = margin.left;
+  }
+
+  // set the absolute position of the cursor
+  position(double px, double py) {
+    x = px;
+    y = py;
+  }
   // Move the cursor relative to the current position
   move(double mx, double my) {
     x += mx;
     y -= my;
-    //y -= lineSpacing;
   }
 
   // This will create a new version of the current cursor

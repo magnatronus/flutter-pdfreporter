@@ -54,13 +54,9 @@ abstract class PDFReportDocument {
   /// if [number] is specified then that number of linespaces will be added rather than the default of 1
   newline({int number: 1});
 
-  /// Helper function to insert a paragraph space into the document at the current curosr location
-  paragraph();
-
   /// Add the specified [text] to the current page
-  /// [paragraph] can be turned on and off and is used to add amount ofspace before the text is added
-  /// [style] cn be used to specify the style of the text being added - this will default to 'normal
-  /// [backgroundColor] if specified can be used to add a background colr to the text being printed
+  /// [paragraph] can be turned on and off , if set it will add a newline BEFORE any text is printed and if false by default
+  /// [style] cn be used to specify the style of the text being added - this will default to 'normal'
   addText(String text,
       {bool paragraph: true, Map style, Color backgroundColor});
 

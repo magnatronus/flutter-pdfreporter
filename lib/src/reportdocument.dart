@@ -6,6 +6,8 @@ import 'pdfdocument.dart';
 import 'pdftextstyle.dart';
 import 'pdfmargin.dart';
 import 'pdfdocumentimage.dart';
+import 'pdfdocumenttext.dart';
+
 //import 'package:flutter/services.dart' show rootBundle;
 
 /// This is our concrete class used to represent a PDF document
@@ -22,15 +24,13 @@ class ReportDocument implements PDFReportDocument {
   Map header;
   Map pageNumberInfo;
 
-  ReportDocument(
-      {@required this.document,
-      @required this.paper,
-      @required this.textStyle,
-      @required this.margin,
-      @required this.defaultFontColor}) {
+  ReportDocument({@required this.document,@required this.paper, @required this.textStyle,@required this.margin,@required this.defaultFontColor}) {
     cursor = _Cursor(paper.dimension.h, paper.dimension.w);
     cursor.margin = margin;
     currentFontColor = defaultFontColor;
+    PDFDocumentText textInfo = PDFDocumentText("Pg", textStyle.normal['font'], textStyle.normal['size']); 
+    cursor.lineSpacing = textInfo.cursory;
+    print(cursor.lineSpacing);
   }
 
   addImage(PDFDocumentImage image,
@@ -73,10 +73,6 @@ class ReportDocument implements PDFReportDocument {
     for (int i = 0; i < number; i++) {
       cursor.newLine();
     }
-  }
-
-  paragraph() {
-    cursor.newParagraph();
   }
 
   setPageNumbering(bool active,
@@ -125,7 +121,7 @@ class ReportDocument implements PDFReportDocument {
   }
 
   addText(String text,
-      {bool paragraph: true, Map style, Color backgroundColor}) {
+      {bool paragraph: false, Map style, Color backgroundColor}) {
     // if no currentPage throw an exception
     if (currentPage == null) {
       throw Exception(
@@ -138,22 +134,21 @@ class ReportDocument implements PDFReportDocument {
     // set the font to use
     PDFTTFFont textFont = style['font'];
 
-    // add a paragraph space
+    // add a paragraph space if required
     if (paragraph) {
-      cursor.newParagraph();
+      cursor.newLine();
     }
 
-    //  calulate the word split for each line and add the lines
+    //  calculate the word split for each line and add the lines
     List words = text.split(" ");
     String line = "";
     words.forEach((w) {
       if (line.length < 1) {
         line = w;
       } else {
-        var lb = textFont.stringBounds(line + " $w");
-        double lw = (lb.w * style['size']) + lb.x;
-        if (lw > cursor.printWidth) {
-          printLine(line, textFont, style['size']);
+        PDFDocumentText textInfo = PDFDocumentText((line + "$w"), textFont, style['size']);       
+        if (textInfo.lineWidth > cursor.printWidth) {
+          printLine(PDFDocumentText(line, textFont, style['size']), backgroundColor);
           line = w;
         } else {
           line += ' $w';
@@ -161,10 +156,10 @@ class ReportDocument implements PDFReportDocument {
       }
     });
 
-    // add any text that is left
+    // add any text that is left then a newline
     if (line.length > 0) {
-      printLine(line, textFont, style['size']);
-      cursor.newLine();
+      printLine(PDFDocumentText(line, textFont, style['size']), backgroundColor);
+      //cursor.newLine();
     }
   }
 
@@ -181,7 +176,7 @@ class ReportDocument implements PDFReportDocument {
 
     // add a paragraph space
     if (paragraph) {
-      cursor.newParagraph();
+      cursor.newLine();
     }
 
     // if no style specified default to normal
@@ -312,7 +307,7 @@ class ReportDocument implements PDFReportDocument {
   /// Add a header to the page
   printHeader() {
     addText(header['text'], style: header['style']);
-    cursor.newParagraph();
+    cursor.newLine();
   }
 
   /// This will print out the specfied [text] at the specified position
@@ -333,28 +328,42 @@ class ReportDocument implements PDFReportDocument {
   /// This will print out the string specified in [line] using the current cursor position
   /// and the [font] and [size] specified
   /// If the line will not fit on the page it will first create a new page
-  printLine(line, font, size) {
-    var lb = font.stringBounds(line);
-    double yshim = (lb.h - lb.y) * size;
+  printLine(PDFDocumentText text, backgroundColor) {
 
-    // Make sure we used the correct color
+     //print("------------------------------------------------------------------------------------");
+     //cursor.printBounds();
+     //text.printBounds();
+
+    // check if line will print on the page - if not create a new page
+    if ((cursor.y - text.lineHeight) < cursor.maxy) {
+      newPage();
+    }
+
+    // move cursor ready for text print
+    cursor.move(0.0, text.cursory);
+
+    // draw a box around the text
+    if(backgroundColor != null){
+      currentPage.getGraphics().setColor(PDFColor.fromInt(backgroundColor.value));
+      currentPage.getGraphics().drawRect(cursor.x, cursor.y, cursor.printWidth, text.cursory);
+      currentPage.getGraphics().fillPath(); 
+    }
+
+    // Set the text color
     currentPage
         .getGraphics()
         .setColor(PDFColor.fromInt(currentFontColor.value));
 
-    // check if line will print on the page - if not create a new page
-    if ((cursor.y - yshim) < cursor.maxy) {
-      newPage();
-    }
 
-    // add line to page
-    cursor.move(0.0, yshim);
-    currentPage.getGraphics().drawString(font, size, line, cursor.x, cursor.y);
+    // print text to page
+    currentPage.getGraphics().drawString(text.font, text.size, text.text, (cursor.x + text.padding), ( cursor.y  + text.padding - text.gutter));
+
   }
 }
 
 /// Define a cursor to keep track of the current print position
 class _Cursor {
+
   // Current height and width of paper
   final double paperHeight;
   final double paperWidth;
@@ -371,11 +380,9 @@ class _Cursor {
   double printWidth;
   double printHeight;
 
-  /// Default the spacing between each printed line to me 1MM
-  double lineSpacing = PDFPageFormat.mm;
-
-  // Set the space to Leave for a new paragraph to be 4MM
-  double paragraphHeight = (PDFPageFormat.mm * 4);
+  /// Default newline value
+  double lineSpacing = (PDFPageFormat.mm);
+  //double paragraphHeight;
 
   // The space to allow if we have set up page numbering
   double pageNumberHeight = 0.0;
@@ -383,30 +390,23 @@ class _Cursor {
   /// The margin set in the document being generated
   PDFDocumentMargin margin = PDFDocumentMargin();
 
-  _Cursor(this.paperHeight, this.paperWidth,
-      {this.lineSpacing: PDFPageFormat.mm})
-      : x = 0.0,
-        y = paperHeight;
+  _Cursor(this.paperHeight, this.paperWidth):x = 0.0, y = paperHeight;
 
   /// debug print
   printBounds() {
-    print(
-        "paperHeight: $paperHeight, paperWidth: $paperWidth, printHeight: $printHeight, printWidth: $printWidth");
+    print("paperHeight: $paperHeight, paperWidth: $paperWidth, printHeight: $printHeight, printWidth: $printWidth");
     print("x: $x, y: $y, maxx: $maxx, maxy: $maxy");
   }
 
   /// Reset the cursor ready for a new page
   reset() {
+    //paragraphHeight = 3 * lineSpacing;
     x = margin.left;
     y = paperHeight - margin.top;
     maxx = paperWidth - margin.right;
-    maxy = (pageNumberHeight == 0)
-        ? margin.bottom
-        : (margin.bottom + pageNumberHeight + paragraphHeight);
+    maxy = (pageNumberHeight == 0)?margin.bottom: (margin.bottom + pageNumberHeight + lineSpacing);
     printWidth = paperWidth - (margin.right + margin.left);
     printHeight = paperHeight - (margin.top + margin.bottom);
-
-    printBounds();
   }
 
   // Add a new line space
@@ -414,16 +414,16 @@ class _Cursor {
     y -= lineSpacing;
   }
 
-  /// add a paragraph space
-  newParagraph() {
-    y -= paragraphHeight;
-  }
+  /// add a paragraph space 
+  //newParagraph() {
+  //  y -= paragraphHeight;
+  //}
 
   // Move the cursor relative to the current position
   move(double mx, double my) {
     x += mx;
     y -= my;
-    y -= lineSpacing;
+    //y -= lineSpacing;
   }
 
   // This will create a new version of the current cursor
@@ -432,7 +432,7 @@ class _Cursor {
     clone.margin = margin;
     clone.reset();
     clone.x = x;
-    clone.x = y;
+    clone.y = y;
     return clone;
   }
 }

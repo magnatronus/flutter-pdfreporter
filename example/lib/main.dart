@@ -80,15 +80,42 @@ class _DemoScreen extends StatelessWidget {
   generateReport(context) async {
     // Start by creatng a new blank document and set up a standard header
     PDFReportDocument pdf = await PDFReporter.createReport(
-        paper: PDFDocumentSize(size: DocumentPaperSize.a4),
+        paper: PDFDocumentSize(size: DocumentPaperSize.a5, landscape: true),
         margin: PDFDocumentMargin(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0),
         );
-    pdf.setPageHeader("PDF Document");
+    pdf.setPageHeader("Test Document");
     pdf.setPageNumbering(true,
         size: 8.0, alignment: PDFPageNumberAlignment.right);
 
     // Create the first page
     pdf.newPage();
+
+
+/*
+    pdf.addText(
+      "1. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom."
+    );    
+
+    pdf.addText(
+      "2. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+    );    
+
+    pdf.addText(
+      "1. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+          backgroundColor: Colors.yellowAccent
+    );    
+*/
+    pdf.addText(
+      "This is Heading1",
+      style: pdf.textStyle.heading1
+    );
+
 
     /*
     // load a network image
@@ -101,7 +128,7 @@ class _DemoScreen extends StatelessWidget {
     );
     */
 
-    /*
+    
     await pdf.addImage( 
       PDFDocumentImage.loadAssetImage("images/cat.png"),
       x: 50.0,
@@ -109,17 +136,77 @@ class _DemoScreen extends StatelessWidget {
       width: 200.0,
       //height: 150.0  
     );
-    */
+    
 
-    // Add a paragraph of text
-    pdf.addText("This is Heading 1", style: pdf.textStyle.heading1);
+
+    pdf.addText(
+      "Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+          paragraph: false,
+          //backgroundColor: Colors.red
+    );
+    
     pdf.addText(
       "1. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
           "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
-          "content has been created, giving the design and production process more freedom."
+          "content has been created, giving the design and production process more freedom.",
+          paragraph: true,
+    );    
+
+    pdf.addText(
+      "2. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+          paragraph: true,
+    //style: pdf.textStyle.heading1,
+      //backgroundColor: Colors.red
+    );  
+
+
+    pdf.addText(
+      "3. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+    );  
+
+        pdf.addText(
+      "4. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+      backgroundColor: Colors.pink
+    ); 
+
+        pdf.addText(
+      "5. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+      backgroundColor: Colors.green
     );
 
-/*
+    pdf.addText(
+      "6. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+      backgroundColor: Colors.blue
+    );  
+
+        pdf.addText(
+      "7. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+      backgroundColor: Colors.pink
+    ); 
+
+        pdf.addText(
+      "8. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+      backgroundColor: Colors.green
+    ); 
+
+
+
 
     // Add another paragraph in a different color
     pdf.setFontColor(Colors.orange);
@@ -145,10 +232,8 @@ class _DemoScreen extends StatelessWidget {
       "4. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
           "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
           "content has been created, giving the design and production process more freedom.",
+          paragraph: true,
     );
-
-    // add a paragraph
-    pdf.paragraph();
 
     // add column as a header
     pdf.addColumnText(["Date", "Work carried out", "Time"],
@@ -171,9 +256,9 @@ class _DemoScreen extends StatelessWidget {
       "5. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
           "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
           "content has been created, giving the design and production process more freedom.",
+          paragraph: true,
     );
 
-*/
 
     /// To view the PDF we should save it first
     var savedfile = await _saveAndViewReport(pdf.asBytes(), "helloword");

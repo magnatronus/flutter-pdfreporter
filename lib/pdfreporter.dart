@@ -64,4 +64,5 @@ class PDFReporter {
     defaultStyle.title['font'] = PDFTTFFont(document, boldFont);
     return defaultStyle;
   }
+  
 }

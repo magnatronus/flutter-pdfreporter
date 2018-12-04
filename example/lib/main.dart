@@ -128,13 +128,20 @@ class _DemoScreen extends StatelessWidget {
     );
     */
 
+  pdf.addText(
+      "Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
+          "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
+          "content has been created, giving the design and production process more freedom.",
+          paragraph: false,
+          //backgroundColor: Colors.red
+    );
     
     await pdf.addImage( 
       PDFDocumentImage.loadAssetImage("images/cat.png"),
-      x: 50.0,
-      y: 50.0,
+      //x: 200.0,
+      //y: 0.0,
       width: 200.0,
-      //height: 150.0  
+      updateCursor: true 
     );
     
 
@@ -147,6 +154,8 @@ class _DemoScreen extends StatelessWidget {
           //backgroundColor: Colors.red
     );
     
+
+    /*
     pdf.addText(
       "1. Lorem ipsum was conceived as filler text, formatted in a certain way to enable the presentation of graphic elements in documents,"
           "without the need for formal copy. Using Lorem Ipsum allows designers to put together layouts and the form of the content before the"
@@ -258,7 +267,7 @@ class _DemoScreen extends StatelessWidget {
           "content has been created, giving the design and production process more freedom.",
           paragraph: true,
     );
-
+*/
 
     /// To view the PDF we should save it first
     var savedfile = await _saveAndViewReport(pdf.asBytes(), "helloword");

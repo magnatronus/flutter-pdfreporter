@@ -14,14 +14,18 @@ abstract class PDFReportDocument {
   /// The position [x] and [y] are in MM from the Document Origin (0,0) and denotes the top, left corner of the image.
   /// This takes the defined margin into account e.g. if the margins were all set to 10mm the Document Origin(0,0)
   /// would be 10mm from the left and 10mm from the top. This way any x,y position always starts within the page margins
+  /// If either [x]  or [y] are not specified then the values are the current cursor position
+  /// 
   /// [width] and [height] are also in MM  where 0, 1 or both can be specified - if only 1 is selected the other is
   /// calculated from the original aspect ratio of the image. If none are specified the pixel height and width of the original
   /// is mapped as 1 pixel = 1 MM
+  /// 
+  /// [updateCursor] if set to true  will set the current cursor to underneath the image
   ///
   /// [image] is a [PDFDocumentImage]  which can load a network image or an asset image
   /// NB: This method returns a [Future] some you MUST await the result of addImage()
   addImage(PDFDocumentImage image,
-      {double x, double y, double width, double height});
+      {double x, double y, double width, double height, bool updateCursor});
 
   /// Return a copy of the current PDF documents as an byte array
   /// this data can be saved as a pdf file

@@ -34,7 +34,7 @@ class ReportDocument implements PDFReportDocument {
   }
 
   addImage(PDFDocumentImage image,
-      {double x, double y, double width, double height}) async {
+      {double x, double y, double width, double height, bool updateCursor: false}) async {
     if (currentPage == null) {
       throw Exception(
           "The current document has no pages. To add one use the  newPage() method.");
@@ -64,9 +64,18 @@ class ReportDocument implements PDFReportDocument {
         width: result.width,
         height: result.height);
 
-    // Add image to current page
-    currentPage.getGraphics().drawImage(pdfimage, cursor.x + x,
-        (cursor.paperHeight - cursor.margin.top) - (y + height), width, height);
+    // determine origin off set
+    x = (x == null)?cursor.x: cursor.margin.left + x;
+    y = (y==null)?cursor.y - height:(cursor.paperHeight - cursor.margin.top) - (y + height);
+
+    // Add image to page
+    currentPage.getGraphics().drawImage(pdfimage,x,y, width, height);
+
+    // if upDateCursor active update cursor
+    if(updateCursor){
+      cursor.move(0.0 , height);
+    }
+
   }
 
   newline({int number: 1}) {
@@ -400,7 +409,6 @@ class _Cursor {
 
   /// Reset the cursor ready for a new page
   reset() {
-    //paragraphHeight = 3 * lineSpacing;
     x = margin.left;
     y = paperHeight - margin.top;
     maxx = paperWidth - margin.right;
@@ -413,11 +421,6 @@ class _Cursor {
   newLine() {
     y -= lineSpacing;
   }
-
-  /// add a paragraph space 
-  //newParagraph() {
-  //  y -= paragraphHeight;
-  //}
 
   // Move the cursor relative to the current position
   move(double mx, double my) {

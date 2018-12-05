@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'pdftextstyle.dart';
 import 'pdfdocumentimage.dart';
 
-/// Enum used to specify the alignment of the page nubering
-enum PDFPageNumberAlignment { left, right, center }
+/// Enum used to specify the alignment of text on a page
+enum PDFDocumentTextAlignment { left, right, center }
 
 /// This is the abstract class that defines the interface for our ReportDocument
 /// and the  functionality available through the PDFReporter.createReport() method
@@ -14,14 +14,18 @@ abstract class PDFReportDocument {
   /// The position [x] and [y] are in MM from the Document Origin (0,0) and denotes the top, left corner of the image.
   /// This takes the defined margin into account e.g. if the margins were all set to 10mm the Document Origin(0,0)
   /// would be 10mm from the left and 10mm from the top. This way any x,y position always starts within the page margins
+  /// If either [x]  or [y] are not specified then the values are the current cursor position
+  ///
   /// [width] and [height] are also in MM  where 0, 1 or both can be specified - if only 1 is selected the other is
   /// calculated from the original aspect ratio of the image. If none are specified the pixel height and width of the original
   /// is mapped as 1 pixel = 1 MM
   ///
+  /// [updateCursor] if set to true  will set the current cursor to underneath the image
+  ///
   /// [image] is a [PDFDocumentImage]  which can load a network image or an asset image
   /// NB: This method returns a [Future] some you MUST await the result of addImage()
   addImage(PDFDocumentImage image,
-      {double x, double y, double width, double height});
+      {double x, double y, double width, double height, bool updateCursor});
 
   /// Return a copy of the current PDF documents as an byte array
   /// this data can be saved as a pdf file
@@ -48,21 +52,22 @@ abstract class PDFReportDocument {
   /// but by using [size] the font size can altered from the preset size
   /// by default the page number will be left aligned but this ca be chnaged by setting [alignment]
   setPageNumbering(bool active,
-      {String prefix, double size, PDFPageNumberAlignment alignment});
+      {String prefix, double size, PDFDocumentTextAlignment alignment});
 
   /// Helper function to insert a newline space into the document
   /// if [number] is specified then that number of linespaces will be added rather than the default of 1
   newline({int number: 1});
 
-  /// Helper function to insert a paragraph space into the document at the current curosr location
-  paragraph();
-
   /// Add the specified [text] to the current page
-  /// [paragraph] can be turned on and off and is used to add amount ofspace before the text is added
-  /// [style] cn be used to specify the style of the text being added - this will default to 'normal
-  /// [backgroundColor] if specified can be used to add a background colr to the text being printed
+  /// [paragraph] can be turned on and off , if set it will add a newline BEFORE any text is printed and if false by default
+  /// [style] cn be used to specify the style of the text being added - this will default to 'normal'
+  /// if [indent] is specified then the start of the text will be indented from the margin by this amount
   addText(String text,
-      {bool paragraph: true, Map style, Color backgroundColor});
+      {bool paragraph: true,
+      Map style,
+      Color backgroundColor,
+      double indent,
+      PDFDocumentTextAlignment alignment});
 
   /// This will do a print within the confines of a a left and right bound (a column)
   /// The effect of this is to print a restricted column of text on a SINGLE line only

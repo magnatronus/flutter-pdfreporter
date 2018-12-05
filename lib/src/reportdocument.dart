@@ -6,6 +6,8 @@ import 'pdfdocument.dart';
 import 'pdftextstyle.dart';
 import 'pdfmargin.dart';
 import 'pdfdocumentimage.dart';
+import 'pdfdocumenttext.dart';
+
 //import 'package:flutter/services.dart' show rootBundle;
 
 /// This is our concrete class used to represent a PDF document
@@ -31,10 +33,18 @@ class ReportDocument implements PDFReportDocument {
     cursor = _Cursor(paper.dimension.h, paper.dimension.w);
     cursor.margin = margin;
     currentFontColor = defaultFontColor;
+    PDFDocumentText textInfo = PDFDocumentText(
+        "Pg", textStyle.normal['font'], textStyle.normal['size']);
+    cursor.lineSpacing = textInfo.cursory;
+    print(cursor.lineSpacing);
   }
 
   addImage(PDFDocumentImage image,
-      {double x, double y, double width, double height}) async {
+      {double x,
+      double y,
+      double width,
+      double height,
+      bool updateCursor: false}) async {
     if (currentPage == null) {
       throw Exception(
           "The current document has no pages. To add one use the  newPage() method.");
@@ -64,9 +74,19 @@ class ReportDocument implements PDFReportDocument {
         width: result.width,
         height: result.height);
 
-    // Add image to current page
-    currentPage.getGraphics().drawImage(pdfimage, cursor.x + x,
-        (cursor.paperHeight - cursor.margin.top) - (y + height), width, height);
+    // determine origin off set
+    x = (x == null) ? cursor.x : cursor.margin.left + x;
+    y = (y == null)
+        ? cursor.y - height
+        : (cursor.paperHeight - cursor.margin.top) - (y + height);
+
+    // Add image to page
+    currentPage.getGraphics().drawImage(pdfimage, x, y, width, height);
+
+    // if upDateCursor active update cursor
+    if (updateCursor) {
+      cursor.move(0.0, height);
+    }
   }
 
   newline({int number: 1}) {
@@ -75,16 +95,12 @@ class ReportDocument implements PDFReportDocument {
     }
   }
 
-  paragraph() {
-    cursor.newParagraph();
-  }
-
   setPageNumbering(bool active,
-      {String prefix, double size, PDFPageNumberAlignment alignment}) {
+      {String prefix, double size, PDFDocumentTextAlignment alignment}) {
     pageNumberingActive = active ?? false;
     cursor.pageNumberHeight = size ?? textStyle.normal['size'];
     pageNumberInfo = {
-      "alignment": alignment ?? PDFPageNumberAlignment.center,
+      "alignment": alignment ?? PDFDocumentTextAlignment.center,
       "prefix": prefix,
       "size": cursor.pageNumberHeight
     };
@@ -111,6 +127,12 @@ class ReportDocument implements PDFReportDocument {
   newPage() {
     currentPage = PDFPage(document, pageFormat: paper);
     cursor.reset();
+
+    // draw a border around the print margins
+    //currentPage.getGraphics().setColor(PDFColor.fromInt(currentFontColor.value));
+    //currentPage.getGraphics().drawRect(cursor.margin.left, cursor.margin.bottom, cursor.printWidth, cursor.printHeight);
+    //currentPage.getGraphics().strokePath();
+
     if (header != null) {
       printHeader();
     }
@@ -125,7 +147,11 @@ class ReportDocument implements PDFReportDocument {
   }
 
   addText(String text,
-      {bool paragraph: true, Map style, Color backgroundColor}) {
+      {bool paragraph: false,
+      Map style,
+      Color backgroundColor,
+      double indent: 0.0,
+      PDFDocumentTextAlignment alignment: PDFDocumentTextAlignment.left}) {
     // if no currentPage throw an exception
     if (currentPage == null) {
       throw Exception(
@@ -138,22 +164,23 @@ class ReportDocument implements PDFReportDocument {
     // set the font to use
     PDFTTFFont textFont = style['font'];
 
-    // add a paragraph space
+    // add a paragraph space if required
     if (paragraph) {
-      cursor.newParagraph();
+      cursor.newLine();
     }
 
-    //  calulate the word split for each line and add the lines
+    //  calculate the word split for each line and add the lines
     List words = text.split(" ");
     String line = "";
     words.forEach((w) {
       if (line.length < 1) {
         line = w;
       } else {
-        var lb = textFont.stringBounds(line + " $w");
-        double lw = (lb.w * style['size']) + lb.x;
-        if (lw > cursor.printWidth) {
-          printLine(line, textFont, style['size']);
+        PDFDocumentText textInfo =
+            PDFDocumentText((line + " $w"), textFont, style['size']);
+        if (textInfo.lineWidth > (cursor.printWidth - indent)) {
+          printLine(PDFDocumentText(line, textFont, style['size']),
+              backgroundColor, indent, alignment);
           line = w;
         } else {
           line += ' $w';
@@ -161,10 +188,11 @@ class ReportDocument implements PDFReportDocument {
       }
     });
 
-    // add any text that is left
+    // add any text that is left then a newline
     if (line.length > 0) {
-      printLine(line, textFont, style['size']);
-      cursor.newLine();
+      printLine(PDFDocumentText(line, textFont, style['size']), backgroundColor,
+          indent, alignment);
+      //cursor.newLine();
     }
   }
 
@@ -181,7 +209,7 @@ class ReportDocument implements PDFReportDocument {
 
     // add a paragraph space
     if (paragraph) {
-      cursor.newParagraph();
+      cursor.newLine();
     }
 
     // if no style specified default to normal
@@ -253,12 +281,12 @@ class ReportDocument implements PDFReportDocument {
     double y = cursor.margin.bottom;
 
     // right justify the page number
-    if (pageNumberInfo['alignment'] == PDFPageNumberAlignment.right) {
+    if (pageNumberInfo['alignment'] == PDFDocumentTextAlignment.right) {
       x = cursor.maxx - (bounds.w * size);
     }
 
     // if center justify
-    if (pageNumberInfo['alignment'] == PDFPageNumberAlignment.center) {
+    if (pageNumberInfo['alignment'] == PDFDocumentTextAlignment.center) {
       double midway = cursor.paperWidth / 2;
       x = midway - ((bounds.w * size) / 2);
     }
@@ -312,7 +340,7 @@ class ReportDocument implements PDFReportDocument {
   /// Add a header to the page
   printHeader() {
     addText(header['text'], style: header['style']);
-    cursor.newParagraph();
+    cursor.newLine();
   }
 
   /// This will print out the specfied [text] at the specified position
@@ -333,23 +361,52 @@ class ReportDocument implements PDFReportDocument {
   /// This will print out the string specified in [line] using the current cursor position
   /// and the [font] and [size] specified
   /// If the line will not fit on the page it will first create a new page
-  printLine(line, font, size) {
-    var lb = font.stringBounds(line);
-    double yshim = (lb.h - lb.y) * size;
+  printLine(PDFDocumentText text, backgroundColor, double indent,
+      PDFDocumentTextAlignment alignment) {
+    // check if line will print on the page - if not create a new page
+    if ((cursor.y - text.lineHeight) < cursor.maxy) {
+      newPage();
+    }
 
-    // Make sure we used the correct color
+    // move cursor ready for text print
+    cursor.move(indent, text.cursory);
+
+    // draw a box around the text for background if required
+    if (backgroundColor != null) {
+      currentPage
+          .getGraphics()
+          .setColor(PDFColor.fromInt(backgroundColor.value));
+      currentPage.getGraphics().drawRect(
+          cursor.x, cursor.y, (cursor.printWidth - indent), text.cursory);
+      currentPage.getGraphics().fillPath();
+    }
+
+    // calculate x pos based on alignment
+    double textStart = text.padding;
+    if (alignment == PDFDocumentTextAlignment.right) {
+      textStart = (cursor.printWidth - indent) - text.lineWidth;
+    }
+    if (alignment == PDFDocumentTextAlignment.center) {
+      double midpoint = (cursor.printWidth - indent) / 2;
+      textStart = midpoint - (text.lineWidth / 2);
+    }
+
+    // temp draw a box around the text for position checking
+    //currentPage.getGraphics().setColor(PDFColor.fromInt(Colors.pinkAccent.value));
+    //currentPage.getGraphics().drawRect((cursor.x + textStart), (cursor.y + text.padding -text.gutter), (text.lineWidth - text.padding) ,text.lineHeight);
+    //currentPage.getGraphics().strokePath();
+
+    // Set the text color
     currentPage
         .getGraphics()
         .setColor(PDFColor.fromInt(currentFontColor.value));
 
-    // check if line will print on the page - if not create a new page
-    if ((cursor.y - yshim) < cursor.maxy) {
-      newPage();
-    }
+    // print text to page
+    currentPage.getGraphics().drawString(text.font, text.size, text.text,
+        (cursor.x + textStart), (cursor.y + text.padding - text.gutter));
 
-    // add line to page
-    cursor.move(0.0, yshim);
-    currentPage.getGraphics().drawString(font, size, line, cursor.x, cursor.y);
+    // Reset the margin in case of an indent print
+    cursor.resetMargin();
   }
 }
 
@@ -371,11 +428,9 @@ class _Cursor {
   double printWidth;
   double printHeight;
 
-  /// Default the spacing between each printed line to me 1MM
-  double lineSpacing = PDFPageFormat.mm;
-
-  // Set the space to Leave for a new paragraph to be 4MM
-  double paragraphHeight = (PDFPageFormat.mm * 4);
+  /// Default newline value
+  double lineSpacing = (PDFPageFormat.mm);
+  //double paragraphHeight;
 
   // The space to allow if we have set up page numbering
   double pageNumberHeight = 0.0;
@@ -383,8 +438,7 @@ class _Cursor {
   /// The margin set in the document being generated
   PDFDocumentMargin margin = PDFDocumentMargin();
 
-  _Cursor(this.paperHeight, this.paperWidth,
-      {this.lineSpacing: PDFPageFormat.mm})
+  _Cursor(this.paperHeight, this.paperWidth)
       : x = 0.0,
         y = paperHeight;
 
@@ -402,11 +456,9 @@ class _Cursor {
     maxx = paperWidth - margin.right;
     maxy = (pageNumberHeight == 0)
         ? margin.bottom
-        : (margin.bottom + pageNumberHeight + paragraphHeight);
+        : (margin.bottom + pageNumberHeight + lineSpacing);
     printWidth = paperWidth - (margin.right + margin.left);
     printHeight = paperHeight - (margin.top + margin.bottom);
-
-    printBounds();
   }
 
   // Add a new line space
@@ -414,16 +466,21 @@ class _Cursor {
     y -= lineSpacing;
   }
 
-  /// add a paragraph space
-  newParagraph() {
-    y -= paragraphHeight;
+  // Reset the margin left
+  resetMargin() {
+    x = margin.left;
+  }
+
+  // set the absolute position of the cursor
+  position(double px, double py) {
+    x = px;
+    y = py;
   }
 
   // Move the cursor relative to the current position
   move(double mx, double my) {
     x += mx;
     y -= my;
-    y -= lineSpacing;
   }
 
   // This will create a new version of the current cursor
@@ -432,7 +489,7 @@ class _Cursor {
     clone.margin = margin;
     clone.reset();
     clone.x = x;
-    clone.x = y;
+    clone.y = y;
     return clone;
   }
 }

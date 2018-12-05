@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'pdftextstyle.dart';
 import 'pdfdocumentimage.dart';
 
-/// Enum used to specify the alignment of the page nubering
-enum PDFPageNumberAlignment { left, right, center }
+/// Enum used to specify the alignment of text on a page
+enum PDFDocumentTextAlignment { left, right, center }
 
 /// This is the abstract class that defines the interface for our ReportDocument
 /// and the  functionality available through the PDFReporter.createReport() method
@@ -15,11 +15,11 @@ abstract class PDFReportDocument {
   /// This takes the defined margin into account e.g. if the margins were all set to 10mm the Document Origin(0,0)
   /// would be 10mm from the left and 10mm from the top. This way any x,y position always starts within the page margins
   /// If either [x]  or [y] are not specified then the values are the current cursor position
-  /// 
+  ///
   /// [width] and [height] are also in MM  where 0, 1 or both can be specified - if only 1 is selected the other is
   /// calculated from the original aspect ratio of the image. If none are specified the pixel height and width of the original
   /// is mapped as 1 pixel = 1 MM
-  /// 
+  ///
   /// [updateCursor] if set to true  will set the current cursor to underneath the image
   ///
   /// [image] is a [PDFDocumentImage]  which can load a network image or an asset image
@@ -52,7 +52,7 @@ abstract class PDFReportDocument {
   /// but by using [size] the font size can altered from the preset size
   /// by default the page number will be left aligned but this ca be chnaged by setting [alignment]
   setPageNumbering(bool active,
-      {String prefix, double size, PDFPageNumberAlignment alignment});
+      {String prefix, double size, PDFDocumentTextAlignment alignment});
 
   /// Helper function to insert a newline space into the document
   /// if [number] is specified then that number of linespaces will be added rather than the default of 1
@@ -63,7 +63,11 @@ abstract class PDFReportDocument {
   /// [style] cn be used to specify the style of the text being added - this will default to 'normal'
   /// if [indent] is specified then the start of the text will be indented from the margin by this amount
   addText(String text,
-      {bool paragraph: true, Map style, Color backgroundColor, double indent});
+      {bool paragraph: true,
+      Map style,
+      Color backgroundColor,
+      double indent,
+      PDFDocumentTextAlignment alignment});
 
   /// This will do a print within the confines of a a left and right bound (a column)
   /// The effect of this is to print a restricted column of text on a SINGLE line only
